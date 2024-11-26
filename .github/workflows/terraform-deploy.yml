@@ -25,7 +25,15 @@ jobs:
       run: terraform init
       working-directory: terraform-vpc
 
-    # Bước 4: Terraform Apply
+    # Bước 4: Cài đặt Checkov
+    - name: Install Checkov
+      run: pip install checkov
+
+    # Bước 5: Chạy Checkov để kiểm tra Terraform code
+    - name: Run Checkov
+      run: checkov -d terraform-vpc --quiet
+
+    # Bước 6: Terraform Apply
     - name: Terraform Apply
       run: terraform apply -auto-approve -var "my_ip=118.69.158.111"
       working-directory: terraform-vpc
