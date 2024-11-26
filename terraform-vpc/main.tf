@@ -17,12 +17,12 @@ resource "aws_default_tags" "default" {
     Environment = "DevOps"
     Owner       = "tuhoang"
   }
-}
+} 
 # Public Subnet
 resource "aws_subnet" "public" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = var.public_cidr
-  map_public_ip_on_launch = false
+  map_public_ip_on_launch = true
   availability_zone = "us-east-1a"
   tags = {
     Name = "Public-Subnet"
@@ -161,7 +161,7 @@ resource "aws_instance" "public_ec2" {
   instance_type              = "t2.micro"
   subnet_id                  = aws_subnet.public.id
   vpc_security_group_ids     = [aws_security_group.public_sg.id]  
-  associate_public_ip_address = false
+  associate_public_ip_address = true
   ebs_optimized              = true  # Enable EBS optimization
   monitoring                 = true  # Enable detailed monitoring
   metadata_options {
