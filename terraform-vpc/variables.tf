@@ -15,5 +15,8 @@ variable "vpc_cidr" {
 }
 
 variable "my_ip" {
-  description = "118.68.23.252"
+  description = "118.69.158.111"
+  type        = string
+  default     = "118.69.158.111"
+
 }

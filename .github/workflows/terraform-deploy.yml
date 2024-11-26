@@ -27,7 +27,7 @@ jobs:
 
     # Bước 4: Terraform Apply
     - name: Terraform Apply
-      run: terraform apply -auto-approve
+      run: terraform apply -auto-approve -var "my_ip=118.69.158.111"
       working-directory: terraform-vpc
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
