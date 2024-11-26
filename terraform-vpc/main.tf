@@ -5,11 +5,19 @@ provider "aws" {
 # Tạo VPC
 resource "aws_vpc" "main" {
   cidr_block = var.vpc_cidr
+  lifecycle {
+    prevent_destroy = true
+  }
   tags = {
     Name = "DevOps-VPC"
   }
 }
-
+resource "aws_default_tags" "default" {
+  tags = {
+    Environment = "DevOps"
+    Owner       = "tuhoang"
+  }
+}
 # Public Subnet
 resource "aws_subnet" "public" {
   vpc_id            = aws_vpc.main.id
@@ -92,12 +100,21 @@ resource "aws_route_table_association" "private_assoc" {
 # Security Groups
 resource "aws_security_group" "public_sg" {
   vpc_id = aws_vpc.main.id
+
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["118.68.23.252/32"] # Cấp quyền SSH từ địa chỉ IP của bạn
+    cidr_blocks = [var.my_ip] # Dùng biến thay IP cứng
   }
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # Cần nếu chạy HTTP server
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -108,24 +125,29 @@ resource "aws_security_group" "public_sg" {
     Name = "Public-SG"
   }
 }
+
 resource "aws_security_group" "private_sg" {
   vpc_id = aws_vpc.main.id
+
   ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    security_groups = [aws_security_group.public_sg.id]
+    from_port        = 22
+    to_port          = 22
+    protocol         = "tcp"
+    security_groups  = [aws_security_group.public_sg.id]
   }
+
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   tags = {
     Name = "Private-SG"
   }
 }
+
 
 # EC2 Instances
 resource "aws_instance" "public_ec2" {
@@ -141,7 +163,7 @@ resource "aws_instance" "public_ec2" {
 }
 
 resource "aws_instance" "private_ec2" {
-  ami                        = "ami-0c02fb55956c7d316"  # Amazon Linux 2 AMI (US-East-1)
+  ami           = var.ami_id
   instance_type              = "t2.micro"
   subnet_id                  = aws_subnet.private.id
   vpc_security_group_ids     = [aws_security_group.private_sg.id]  # Use security group ID here

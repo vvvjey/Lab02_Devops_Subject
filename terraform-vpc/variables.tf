@@ -20,3 +20,7 @@ variable "my_ip" {
   default     = "118.69.158.111"
 
 }
+variable "ami_id" {
+  description = "AMI ID for the EC2 instances"
+  default     = "ami-0c02fb55956c7d316"  # Replace with latest AMI ID (Amazon Linux 2 for us-east-1)
+}
