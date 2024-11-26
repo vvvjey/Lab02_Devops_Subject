@@ -3,7 +3,7 @@ name: Terraform Deploy
 on:
   push:
     branches:
-      - main 
+      - main # Chạy khi có thay đổi trên nhánh main
 
 jobs:
   terraform:
@@ -23,10 +23,12 @@ jobs:
     # Bước 3: Terraform Init
     - name: Terraform Init
       run: terraform init
+      working-directory: terraform-vpc
 
     # Bước 4: Terraform Apply
     - name: Terraform Apply
       run: terraform apply -auto-approve
+      working-directory: terraform-vpc
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
