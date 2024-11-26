@@ -22,7 +22,7 @@ resource "aws_default_tags" "default" {
 resource "aws_subnet" "public" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = var.public_cidr
-  map_public_ip_on_launch = true
+  map_public_ip_on_launch = false
   availability_zone = "us-east-1a"
   tags = {
     Name = "Public-Subnet"
@@ -106,6 +106,8 @@ resource "aws_security_group" "public_sg" {
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = [var.my_ip] # Dùng biến thay IP cứng
+    description = "SSH access from trusted IP"
+
   }
 
   ingress {
@@ -113,6 +115,8 @@ resource "aws_security_group" "public_sg" {
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"] # Cần nếu chạy HTTP server
+    description = "HTTP access"
+
   }
 
   egress {
@@ -120,6 +124,8 @@ resource "aws_security_group" "public_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all outbound traffic"
+
   }
   tags = {
     Name = "Public-SG"
@@ -151,23 +157,43 @@ resource "aws_security_group" "private_sg" {
 
 # EC2 Instances
 resource "aws_instance" "public_ec2" {
-  ami                        = "ami-0c02fb55956c7d316"  # Amazon Linux 2 AMI (US-East-1)
+  ami                        = "ami-0c02fb55956c7d316" 
   instance_type              = "t2.micro"
   subnet_id                  = aws_subnet.public.id
-  vpc_security_group_ids     = [aws_security_group.public_sg.id]  # Use security group ID here
-  associate_public_ip_address = true
-  depends_on = [aws_security_group.public_sg]  # Ensure security group is created first
+  vpc_security_group_ids     = [aws_security_group.public_sg.id]  
+  associate_public_ip_address = false
+  ebs_optimized              = true  # Enable EBS optimization
+  monitoring                 = true  # Enable detailed monitoring
+  metadata_options {
+    http_tokens = "required"  # Ensure IMDSv2 is enabled
+  }
+  ebs_block_device {
+    device_name = "/dev/sda1"
+    volume_size = 8
+    encrypted   = true  # Ensure encryption
+  }
+  depends_on = [aws_security_group.public_sg]  
   tags = {
     Name = "Public-EC2"
   }
 }
 
 resource "aws_instance" "private_ec2" {
-  ami           = var.ami_id
+  ami                        = var.ami_id
   instance_type              = "t2.micro"
   subnet_id                  = aws_subnet.private.id
-  vpc_security_group_ids     = [aws_security_group.private_sg.id]  # Use security group ID here
-  depends_on = [aws_security_group.private_sg]  # Ensure security group is created first
+  vpc_security_group_ids     = [aws_security_group.private_sg.id]  
+  ebs_optimized              = true
+  monitoring                 = true  # Enable detailed monitoring
+  metadata_options {
+    http_tokens = "required"
+  }
+  ebs_block_device {
+    device_name = "/dev/sda1"
+    volume_size = 8
+    encrypted   = true  # Ensure encryption
+  }
+  depends_on = [aws_security_group.private_sg]  
   tags = {
     Name = "Private-EC2"
   }
